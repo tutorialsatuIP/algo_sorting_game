@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pertualangan Pulau Algoritma</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        box-sizing: border-box;
+      }
+
+      .font-fredoka {
+        font-family: "Fredoka One", cursive;
+      }
+      .font-nunito {
+        font-family: "Nunito", sans-serif;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: translateX(0) scaleY(1);
+        }
+        50% {
+          transform: translateX(10px) scaleY(0.9);
+        }
+      }
+
+      @keyframes sparkle {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(1.2);
+        }
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+        }
+      }
+
+      @keyframes ship-rock {
+        0%,
+        100% {
+          transform: rotate(-3deg);
+        }
+        50% {
+          transform: rotate(3deg);
+        }
+      }
+
+      @keyframes bounce-in {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slide-up {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      .animate-float {
+        animation: float 3s ease-in-out infinite;
+      }
+      .animate-wave {
+        animation: wave 4s ease-in-out infinite;
+      }
+      .animate-sparkle {
+        animation: sparkle 2s ease-in-out infinite;
+      }
+      .animate-pulse-glow {
+        animation: pulse-glow 2s ease-in-out infinite;
+      }
+      .animate-ship-rock {
+        animation: ship-rock 2s ease-in-out infinite;
+      }
+      .animate-bounce-in {
+        animation: bounce-in 0.5s ease-out forwards;
+      }
+      .animate-slide-up {
+        animation: slide-up 0.5s ease-out forwards;
+      }
+      .animate-shake {
+        animation: shake 0.5s ease-in-out;
+      }
+
+      .ocean-gradient {
+        background: linear-gradient(
+          180deg,
+          #1e3a5f 0%,
+          #0d2137 50%,
+          #0a1628 100%
+        );
+      }
+
+      .island-node {
+        transition: all 0.3s ease;
+      }
+
+      .island-node:hover:not(.locked) {
+        transform: scale(1.1);
+      }
+
+      .path-line {
+        stroke-dasharray: 10, 5;
+        animation: dash 20s linear infinite;
+      }
+
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -1000;
+        }
+      }
+
+      .card-slot {
+        transition: all 0.2s ease;
+      }
+
+      .card-slot.highlight {
+        background: rgba(74, 222, 128, 0.3);
+        border-color: #4ade80;
+      }
+
+      .card-slot.wrong {
+        background: rgba(248, 113, 113, 0.3);
+        border-color: #f87171;
+      }
+
+      .draggable-card {
+        cursor: grab;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .draggable-card:active {
+        cursor: grabbing;
+      }
+
+      .draggable-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .treasure-glow {
+        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+      }
+
+      .modal-overlay {
+        backdrop-filter: blur(5px);
+      }
+    </style>
+    <style>
+      @view-transition {
+        navigation: auto;
+      }
+    </style>
+    <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  </head>
+  <body class="h-full font-nunito overflow-hidden">
+    <div id="app" class="h-full w-full">
+      <!-- BUMPER SCREEN -->
+      <div
+        id="bumper-screen"
+        class="h-full w-full ocean-gradient flex flex-col items-center justify-center relative overflow-hidden"
+      >
+        <!-- Animated waves background -->
+        <div class="absolute bottom-0 left-0 right-0 h-32 opacity-30">
+          <svg
+            class="w-full h-full animate-wave"
+            viewbox="0 0 1440 120"
+            preserveaspectratio="none"
+          >
+            <path
+              fill="#3b82f6"
+              d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,30 1440,60 L1440,120 L0,120 Z"
+            />
+          </svg>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-24 opacity-20">
+          <svg
+            class="w-full h-full animate-wave"
+            style="animation-delay: -1s"
+            viewbox="0 0 1440 120"
+            preserveaspectratio="none"
+          >
+            <path
+              fill="#60a5fa"
+              d="M0,80 C360,20 720,100 1080,40 C1260,60 1380,80 1440,40 L1440,120 L0,120 Z"
+            />
+          </svg>
+        </div>
+        <!-- Stars -->
+        <div class="absolute inset-0 overflow-hidden">
+          <div
+            class="absolute top-10 left-20 w-2 h-2 bg-white rounded-full animate-sparkle"
+          ></div>
+          <div
+            class="absolute top-20 right-32 w-1 h-1 bg-yellow-200 rounded-full animate-sparkle"
+            style="animation-delay: 0.5s"
+          ></div>
+          <div
+            class="absolute top-32 left-1/4 w-2 h-2 bg-white rounded-full animate-sparkle"
+            style="animation-delay: 1s"
+          ></div>
+          <div
+            class="absolute top-16 right-1/4 w-1 h-1 bg-yellow-100 rounded-full animate-sparkle"
+            style="animation-delay: 1.5s"
+          ></div>
+          <div
+            class="absolute top-40 left-1/3 w-1 h-1 bg-white rounded-full animate-sparkle"
+            style="animation-delay: 0.3s"
+          ></div>
+        </div>
+        <!-- Ship -->
+        <div class="absolute bottom-20 left-10 animate-ship-rock">
+          <svg width="80" height="60" viewbox="0 0 80 60">
+            <path
+              d="M10,40 Q40,50 70,40 L65,55 Q40,60 15,55 Z"
+              fill="#8B4513"
+            />
+            <rect x="35" y="10" width="6" height="30" fill="#654321" />
+            <path d="M41,10 Q60,20 41,35" fill="#f5f5f5" />
+            <circle cx="25" cy="45" r="3" fill="#FFD700" />
+          </svg>
+        </div>
+        <!-- Main Content -->
+        <div class="text-center z-10 px-4">
+          <!-- Treasure chest icon -->
+          <div class="animate-float mb-6">
+            <svg
+              width="120"
+              height="100"
+              viewbox="0 0 120 100"
+              class="mx-auto treasure-glow"
+            >
+              <rect
+                x="15"
+                y="40"
+                width="90"
+                height="50"
+                rx="5"
+                fill="#8B4513"
+              />
+              <rect
+                x="15"
+                y="40"
+                width="90"
+                height="50"
+                rx="5"
+                fill="url(#chestGradient)"
+              />
+              <rect
+                x="20"
+                y="35"
+                width="80"
+                height="15"
+                rx="3"
+                fill="#A0522D"
+              />
+              <ellipse cx="60" cy="35" rx="40" ry="12" fill="#654321" />
+              <rect
+                x="50"
+                y="50"
+                width="20"
+                height="15"
+                rx="3"
+                fill="#FFD700"
+              />
+              <circle cx="60" cy="57" r="4" fill="#B8860B" />
+              <circle cx="30" cy="60" r="8" fill="#FFD700" opacity="0.8" />
+              <circle cx="45" cy="70" r="6" fill="#FFD700" opacity="0.7" />
+              <circle cx="75" cy="65" r="7" fill="#FFD700" opacity="0.8" />
+              <circle cx="85" cy="55" r="5" fill="#FFD700" opacity="0.6" />
+              <defs>
+                <lineargradient
+                  id="chestGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop offset="0%" style="stop-color: #a0522d" />
+                  <stop offset="100%" style="stop-color: #5d3a1a" />
+                </lineargradient>
+              </defs>
+            </svg>
+          </div>
+          <h1
+            id="main-title"
+            class="font-fredoka text-5xl md:text-7xl text-yellow-400 mb-4 drop-shadow-lg"
+            style="text-shadow: 3px 3px 0 #b8860b, 6px 6px 0 rgba(0, 0, 0, 0.3)"
+          >
+            Pertualangan Pulau Algoritma
+          </h1>
+          <p
+            id="main-subtitle"
+            class="text-xl md:text-2xl text-blue-200 mb-8 font-semibold"
+          >
+            Kuasai Algoritma Sorting untuk Menemukan Harta Karun!
+          </p>
+          <!-- Play Button -->
+          <button
+            id="play-btn"
+            class="group relative px-12 py-5 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full font-fredoka text-2xl text-amber-900 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-pulse-glow"
+          >
+            <span class="flex items-center gap-3">
+              <svg
+                width="30"
+                height="30"
+                viewbox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              MULAI BERTUALANG
+            </span>
+            <div
+              class="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity"
+            ></div>
+          </button>
+          <!-- Info badges -->
+          <div class="flex flex-wrap justify-center gap-4 mt-8">
+            <div
+              class="bg-blue-900/50 px-4 py-2 rounded-full text-blue-200 text-sm font-semibold border border-blue-700"
+            >
+              📚 Informatika Kelas 10
+            </div>
+            <div
+              class="bg-purple-900/50 px-4 py-2 rounded-full text-purple-200 text-sm font-semibold border border-purple-700"
+            >
+              🧠 Berpikir Komputasional
+            </div>
+            <div
+              class="bg-green-900/50 px-4 py-2 rounded-full text-green-200 text-sm font-semibold border border-green-700"
+            >
+              🎮 Gim Edukasi
+            </div>
+          </div>
+        </div>
+        <!-- Compass -->
+        <div
+          class="absolute bottom-10 right-10 animate-float"
+          style="animation-delay: -1.5s"
+        >
+          <svg width="60" height="60" viewbox="0 0 60 60">
+            <circle
+              cx="30"
+              cy="30"
+              r="28"
+              fill="#B8860B"
+              stroke="#FFD700"
+              stroke-width="3"
+            />
+            <circle cx="30" cy="30" r="22" fill="#1e3a5f" />
+            <polygon points="30,10 33,30 30,35 27,30" fill="#ef4444" />
+            <polygon points="30,50 33,30 30,25 27,30" fill="#f5f5f5" />
+            <circle cx="30" cy="30" r="3" fill="#FFD700" />
+            <text
+              x="30"
+              y="8"
+              text-anchor="middle"
+              fill="#FFD700"
+              font-size="6"
+              font-weight="bold"
+            >
+              N
+            </text>
+          </svg>
+        </div>
+      </div>
+      <!-- MAP SCREEN -->
+      <div id="map-screen" class="h-full w-full hidden">
+        <div class="h-full w-full ocean-gradient relative overflow-hidden">
+          <!-- Header -->
+          <div
+            class="absolute top-0 left-0 right-0 bg-gradient-to-b from-slate-900/90 to-transparent p-4 z-20"
+          >
+            <div class="flex justify-between items-center max-w-6xl mx-auto">
+              <div class="flex items-center gap-4">
+                <button
+                  id="back-to-menu"
+                  class="p-2 bg-slate-800/80 rounded-lg hover:bg-slate-700 transition-colors"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewbox="0 0 24 24"
+                    fill="none"
+                    stroke="#fbbf24"
+                    stroke-width="2"
+                  >
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 class="font-fredoka text-2xl text-yellow-400">
+                  Peta Perjalanan
+                </h2>
+              </div>
+              <div class="flex items-center gap-6">
+                <div
+                  class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-full"
+                >
+                  <span class="text-yellow-400">⭐</span>
+                  <span id="score-display" class="text-white font-bold">0</span>
+                </div>
+                <div
+                  class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-full"
+                >
+                  <span class="text-red-400">❤️</span>
+                  <span id="lives-display" class="text-white font-bold">3</span>
+                </div>
+                <div
+                  class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-full"
+                >
+                  <span class="text-blue-400">🏝️</span>
+                  <span id="progress-display" class="text-white font-bold"
+                    >0/7</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Map Container -->
+          <div
+            class="h-full w-full flex items-center justify-center pt-16 pb-4"
+          >
+            <svg
+              id="map-svg"
+              viewbox="0 0 1000 600"
+              class="w-full h-full max-w-5xl"
+              preserveaspectratio="xMidYMid meet"
+            >
+              <!-- Ocean background -->
+              <defs>
+                <lineargradient
+                  id="oceanGrad"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop offset="0%" style="stop-color: #1e3a5f" />
+                  <stop offset="100%" style="stop-color: #0a1628" />
+                </lineargradient>
+                <filter id="glow">
+                  <fegaussianblur stddeviation="3" result="coloredBlur" />
+                  <femerge>
+                    <femergenode in="coloredBlur" />
+                    <femergenode in="SourceGraphic" />
+                  </femerge>
+                </filter>
+                <pattern
+                  id="waves"
+                  patternunits="userSpaceOnUse"
+                  width="100"
+                  height="20"
+                >
+                  <path
+                    d="M0,10 Q25,0 50,10 T100,10"
+                    stroke="#3b82f6"
+                    stroke-width="1"
+                    fill="none"
+                    opacity="0.3"
+                  />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#oceanGrad)" />
+              <rect width="100%" height="100%" fill="url(#waves)" />
+              <!-- Paths between islands -->
+              <g id="paths-group">
+                <!-- Path 0-1 -->
+                <line
+                  x1="120"
+                  y1="500"
+                  x2="250"
+                  y2="420"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="0"
+                  data-to="1"
+                />
+                <!-- Path 1-2 -->
+                <line
+                  x1="250"
+                  y1="420"
+                  x2="350"
+                  y2="320"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="1"
+                  data-to="2"
+                />
+                <!-- Path 1-3 -->
+                <line
+                  x1="250"
+                  y1="420"
+                  x2="400"
+                  y2="450"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="1"
+                  data-to="3"
+                />
+                <!-- Path 2-4 -->
+                <line
+                  x1="350"
+                  y1="320"
+                  x2="500"
+                  y2="250"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="2"
+                  data-to="4"
+                />
+                <!-- Path 3-4 -->
+                <line
+                  x1="400"
+                  y1="450"
+                  x2="500"
+                  y2="250"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="3"
+                  data-to="4"
+                />
+                <!-- Path 3-5 -->
+                <line
+                  x1="400"
+                  y1="450"
+                  x2="550"
+                  y2="400"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="3"
+                  data-to="5"
+                />
+                <!-- Path 4-6 -->
+                <line
+                  x1="500"
+                  y1="250"
+                  x2="680"
+                  y2="200"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="4"
+                  data-to="6"
+                />
+                <!-- Path 5-6 -->
+                <line
+                  x1="550"
+                  y1="400"
+                  x2="680"
+                  y2="200"
+                  stroke="#4a5568"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="5"
+                  data-to="6"
+                />
+                <!-- Path 6-7 (treasure) -->
+                <line
+                  x1="680"
+                  y1="200"
+                  x2="850"
+                  y2="150"
+                  stroke="#fbbf24"
+                  stroke-width="4"
+                  stroke-dasharray="10,5"
+                  class="path-line"
+                  data-from="6"
+                  data-to="7"
+                />
+              </g>
+              <!-- Islands/Nodes -->
+              <g id="islands-group"></g>
+              <!-- Player ship -->
+              <g id="player-ship" transform="translate(100, 480)">
+                <g class="animate-ship-rock">
+                  <path
+                    d="M0,20 Q20,30 40,20 L35,35 Q20,40 5,35 Z"
+                    fill="#8B4513"
+                  />
+                  <rect x="17" y="0" width="4" height="20" fill="#654321" />
+                  <path d="M21,0 Q35,8 21,18" fill="#f5f5f5" />
+                  <circle cx="10" cy="25" r="2" fill="#FFD700" />
+                </g>
+              </g>
+            </svg>
+          </div>
+          <!-- Legend -->
+          <div
+            class="absolute bottom-4 left-4 bg-slate-900/90 p-3 rounded-xl border border-slate-700"
+          >
+            <h4 class="text-yellow-400 font-bold mb-2 text-sm">Legenda:</h4>
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                <span class="text-green-300">Terselesaikan</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full bg-yellow-500"></div>
+                <span class="text-yellow-300">Posisi Saat Ini</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                <span class="text-blue-300">Bisa Dikunjungi</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full bg-slate-600"></div>
+                <span class="text-slate-400">Terkunci</span>
+              </div>
+            </div>
+          </div>
+          <!-- Instructions -->
+          <div
+            class="absolute bottom-4 right-4 bg-slate-900/90 p-3 rounded-xl border border-slate-700 max-w-xs"
+          >
+            <h4 class="text-yellow-400 font-bold mb-2 text-sm">📜 Petunjuk:</h4>
+            <p class="text-slate-300 text-xs">
+              Klik pulau biru untuk memulai tantangan sorting. Selesaikan
+              tantangan untuk maju ke pulau berikutnya!
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- CHALLENGE MODAL -->
+      <div
+        id="challenge-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay bg-black/70"
+      >
+        <div
+          class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90%] overflow-y-auto border-2 border-yellow-500/30 shadow-2xl animate-bounce-in"
+        >
+          <!-- Challenge Header -->
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  id="challenge-type-badge"
+                  class="px-3 py-1 bg-purple-600 rounded-full text-sm font-bold text-white"
+                  >Bubble Sort</span
+                >
+                <span
+                  id="challenge-difficulty"
+                  class="px-3 py-1 bg-orange-600 rounded-full text-sm font-bold text-white"
+                  >Level 1</span
+                >
+              </div>
+              <h3
+                id="challenge-title"
+                class="font-fredoka text-2xl text-yellow-400"
+              >
+                Tantangan Sorting
+              </h3>
+            </div>
+            <button
+              id="close-challenge"
+              class="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewbox="0 0 24 24"
+                fill="none"
+                stroke="#94a3b8"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- Algorithm Info -->
+          <div id="algorithm-info" class="bg-slate-700/50 rounded-xl p-4 mb-4">
+            <h4 class="text-blue-300 font-bold mb-2">💡 Tentang Algoritma:</h4>
+            <p id="algorithm-desc" class="text-slate-300 text-sm"></p>
+          </div>
+          <!-- Challenge Content -->
+          <div class="bg-slate-700/30 rounded-xl p-4 mb-4">
+            <h4 class="text-green-300 font-bold mb-3">🎯 Misi:</h4>
+            <p id="challenge-instruction" class="text-white mb-4"></p>
+            <!-- Original Array Display -->
+            <div class="mb-4">
+              <span class="text-slate-400 text-sm">Array Awal:</span>
+              <div id="original-array" class="flex gap-2 mt-2 flex-wrap"></div>
+            </div>
+            <!-- Sorting Steps Area -->
+            <div id="sorting-area" class="mb-4">
+              <span class="text-slate-400 text-sm"
+                >Susun langkah-langkah sorting yang benar:</span
+              >
+              <div id="steps-container" class="mt-3 space-y-2"></div>
+            </div>
+            <!-- Available Steps to Drag -->
+            <div id="available-steps" class="mt-4">
+              <span class="text-slate-400 text-sm"
+                >Pilihan Langkah (klik untuk memilih urutan):</span
+              >
+              <div id="step-options" class="flex flex-wrap gap-2 mt-2"></div>
+            </div>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex justify-between items-center">
+            <button
+              id="reset-challenge"
+              class="px-6 py-3 bg-slate-600 hover:bg-slate-500 rounded-xl font-bold text-white transition-colors flex items-center gap-2"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewbox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Reset
+            </button>
+            <button
+              id="submit-answer"
+              class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-xl font-bold text-white transition-all transform hover:scale-105 flex items-center gap-2"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewbox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              Periksa Jawaban
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- RESULT MODAL -->
+      <div
+        id="result-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay bg-black/70"
+      >
+        <div
+          id="result-content"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-md w-full mx-4 text-center border-2 shadow-2xl animate-bounce-in"
+        >
+          <div id="result-icon" class="text-6xl mb-4"></div>
+          <h3 id="result-title" class="font-fredoka text-3xl mb-3"></h3>
+          <p id="result-message" class="text-slate-300 mb-6"></p>
+          <div id="result-score" class="text-2xl font-bold mb-6"></div>
+          <button
+            id="result-continue"
+            class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 rounded-xl font-bold text-amber-900 transition-all transform hover:scale-105"
+          >
+            Lanjutkan
+          </button>
+        </div>
+      </div>
+      <!-- VICTORY SCREEN -->
+      <div
+        id="victory-screen"
+        class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay bg-black/80"
+      >
+        <div class="text-center animate-bounce-in">
+          <div class="animate-float mb-6">
+            <svg
+              width="150"
+              height="120"
+              viewbox="0 0 150 120"
+              class="mx-auto treasure-glow"
+            >
+              <rect
+                x="25"
+                y="50"
+                width="100"
+                height="60"
+                rx="5"
+                fill="#8B4513"
+              />
+              <ellipse cx="75" cy="50" rx="50" ry="15" fill="#654321" />
+              <rect
+                x="30"
+                y="45"
+                width="90"
+                height="10"
+                rx="3"
+                fill="#A0522D"
+              />
+              <rect
+                x="65"
+                y="60"
+                width="20"
+                height="15"
+                rx="3"
+                fill="#FFD700"
+              />
+              <circle cx="40" cy="75" r="10" fill="#FFD700" />
+              <circle cx="55" cy="85" r="8" fill="#FFD700" />
+              <circle cx="95" cy="80" r="9" fill="#FFD700" />
+              <circle cx="110" cy="70" r="7" fill="#FFD700" />
+              <polygon
+                points="75,20 78,30 88,30 80,37 83,47 75,42 67,47 70,37 62,30 72,30"
+                fill="#FFD700"
+              />
+            </svg>
+          </div>
+          <h2
+            class="font-fredoka text-5xl text-yellow-400 mb-4"
+            style="text-shadow: 3px 3px 0 #b8860b"
+          >
+            HARTA KARUN DITEMUKAN!
+          </h2>
+          <p class="text-2xl text-blue-200 mb-6">
+            Selamat! Kamu telah menguasai semua Algoritma Sorting!
+          </p>
+          <div
+            id="final-score"
+            class="text-3xl text-white font-bold mb-8"
+          ></div>
+          <div class="flex justify-center gap-4">
+            <button
+              id="play-again"
+              class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 rounded-xl font-fredoka text-xl text-amber-900 transition-all transform hover:scale-105"
+            >
+              🔄 Main Lagi
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- GAME OVER SCREEN -->
+      <div
+        id="gameover-screen"
+        class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay bg-black/80"
+      >
+        <div class="text-center animate-bounce-in">
+          <div class="text-8xl mb-6">💀</div>
+          <h2 class="font-fredoka text-5xl text-red-400 mb-4">GAME OVER</h2>
+          <p class="text-xl text-slate-300 mb-6">
+            Nyawa habis! Jangan menyerah, coba lagi!
+          </p>
+          <div
+            id="gameover-score"
+            class="text-2xl text-white font-bold mb-8"
+          ></div>
+          <button
+            id="retry-game"
+            class="px-8 py-4 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 rounded-xl font-fredoka text-xl text-white transition-all transform hover:scale-105"
+          >
+            🔄 Coba Lagi
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Default configuration
+      const defaultConfig = {
+        game_title: "Pertualangan Pulau Algoritma",
+        subtitle:
+          "Kuasai Algoritma <i>Sorting</i> untuk Menemukan Harta Karun!",
+        background_color: "#0a1628",
+        surface_color: "#1e293b",
+        text_color: "#f8fafc",
+        primary_action_color: "#fbbf24",
+        secondary_action_color: "#3b82f6",
+      };
+
+      let config = { ...defaultConfig };
+
+      // Game State
+      const gameState = {
+        currentScreen: "bumper",
+        currentNode: 0,
+        score: 0,
+        lives: 3,
+        completedNodes: [0],
+        unlockedNodes: [0, 1],
+        currentChallenge: null,
+        selectedSteps: [],
+      };
+
+      // Island/Node data with positions and challenges
+      const nodes = [
+        {
+          id: 0,
+          x: 120,
+          y: 500,
+          name: "Pelabuhan Awal",
+          type: "start",
+          completed: true,
+        },
+        {
+          id: 1,
+          x: 250,
+          y: 420,
+          name: "Pulau Bubble",
+          type: "bubble",
+          algorithm: "Bubble Sort",
+        },
+        {
+          id: 2,
+          x: 350,
+          y: 320,
+          name: "Pulau Selection",
+          type: "selection",
+          algorithm: "Selection Sort",
+        },
+        {
+          id: 3,
+          x: 400,
+          y: 450,
+          name: "Pulau Insertion",
+          type: "insertion",
+          algorithm: "Insertion Sort",
+        },
+        {
+          id: 4,
+          x: 500,
+          y: 250,
+          name: "Pulau Merge",
+          type: "merge",
+          algorithm: "Merge Sort",
+        },
+        {
+          id: 5,
+          x: 550,
+          y: 400,
+          name: "Pulau Tantangan",
+          type: "mixed",
+          algorithm: "Mixed",
+        },
+        {
+          id: 6,
+          x: 680,
+          y: 200,
+          name: "Pulau Terakhir",
+          type: "final",
+          algorithm: "Final Challenge",
+        },
+        {
+          id: 7,
+          x: 850,
+          y: 150,
+          name: "Harta Karun!",
+          type: "treasure",
+          completed: false,
+        },
+      ];
+
+      // Connections between nodes
+      const connections = {
+        0: [1],
+        1: [2, 3],
+        2: [4],
+        3: [4, 5],
+        4: [6],
+        5: [6],
+        6: [7],
+      };
+
+      // Algorithm descriptions
+      const algorithmInfo = {
+        "Bubble Sort":
+          "Bubble Sort membandingkan elemen bersebelahan dan menukarnya jika urutannya salah. Proses ini diulang hingga tidak ada lagi pertukaran yang diperlukan.",
+        "Selection Sort":
+          "Selection Sort mencari elemen terkecil dari bagian yang belum terurut, lalu menukarnya dengan elemen pertama bagian tersebut.",
+        "Insertion Sort":
+          "Insertion Sort membangun array terurut satu per satu dengan mengambil elemen dan memasukkannya ke posisi yang tepat di bagian yang sudah terurut.",
+        "Merge Sort":
+          "Merge Sort membagi array menjadi dua bagian, mengurutkan masing-masing bagian secara rekursif, lalu menggabungkannya kembali.",
+        Mixed: "Tantangan campuran berbagai algoritma sorting!",
+        "Final Challenge": "Tantangan akhir yang menguji semua pengetahuanmu!",
+      };
+
+      // Challenge generator
+      function generateChallenge(nodeType) {
+        const arrays = [
+          [64, 34, 25, 12, 22],
+          [5, 2, 8, 1, 9],
+          [38, 27, 43, 3, 9],
+          [10, 7, 8, 9, 1],
+          [6, 3, 8, 2, 7],
+        ];
+
+        const arr = arrays[Math.floor(Math.random() * arrays.length)].slice();
+        let algorithmType = nodeType;
+
+        if (nodeType === "mixed" || nodeType === "final") {
+          const types = ["bubble", "selection", "insertion", "merge"];
+          algorithmType = types[Math.floor(Math.random() * types.length)];
+        }
+
+        const steps = generateSortingSteps(arr.slice(), algorithmType);
+        const shuffledSteps = shuffleArray(
+          steps.map((s, i) => ({ ...s, correctIndex: i }))
+        );
+
+        return {
+          type: algorithmType,
+          originalArray: arr,
+          correctSteps: steps,
+          shuffledSteps: shuffledSteps,
+          instruction: getInstruction(algorithmType),
+        };
+      }
+
+      function getInstruction(type) {
+        const instructions = {
+          bubble:
+            "Urutkan langkah-langkah Bubble Sort dengan benar! Bandingkan elemen bersebelahan dan tukar jika perlu.",
+          selection:
+            "Urutkan langkah-langkah Selection Sort! Temukan minimum dan tukar ke posisi yang benar.",
+          insertion:
+            "Urutkan langkah-langkah Insertion Sort! Sisipkan setiap elemen ke posisi yang tepat.",
+          merge:
+            "Urutkan langkah-langkah Merge Sort! Bagi, urutkan, dan gabungkan kembali.",
+        };
+        return instructions[type] || instructions["bubble"];
+      }
+
+      function generateSortingSteps(arr, type) {
+        const steps = [];
+        const original = arr.slice();
+
+        if (type === "bubble") {
+          for (let i = 0; i < arr.length - 1; i++) {
+            for (let j = 0; j < arr.length - i - 1; j++) {
+              if (arr[j] > arr[j + 1]) {
+                steps.push({
+                  description: `Bandingkan ${arr[j]} dan ${
+                    arr[j + 1]
+                  }, tukar posisi`,
+                  array: arr.slice(),
+                  highlight: [j, j + 1],
+                });
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+              }
+            }
+            if (steps.length >= 4) break;
+          }
+        } else if (type === "selection") {
+          for (let i = 0; i < Math.min(arr.length - 1, 4); i++) {
+            let minIdx = i;
+            for (let j = i + 1; j < arr.length; j++) {
+              if (arr[j] < arr[minIdx]) minIdx = j;
+            }
+            if (minIdx !== i) {
+              steps.push({
+                description: `Temukan minimum ${arr[minIdx]}, tukar dengan posisi ${i}`,
+                array: arr.slice(),
+                highlight: [i, minIdx],
+              });
+              [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+            }
+          }
+        } else if (type === "insertion") {
+          for (let i = 1; i < Math.min(arr.length, 5); i++) {
+            let key = arr[i];
+            let j = i - 1;
+            if (j >= 0 && arr[j] > key) {
+              steps.push({
+                description: `Sisipkan ${key} ke posisi yang tepat`,
+                array: arr.slice(),
+                highlight: [i],
+              });
+              while (j >= 0 && arr[j] > key) {
+                arr[j + 1] = arr[j];
+                j--;
+              }
+              arr[j + 1] = key;
+            }
+          }
+        } else if (type === "merge") {
+          steps.push({
+            description: `Bagi array menjadi [${arr
+              .slice(0, Math.ceil(arr.length / 2))
+              .join(", ")}] dan [${arr
+              .slice(Math.ceil(arr.length / 2))
+              .join(", ")}]`,
+            array: arr.slice(),
+            highlight: [
+              Math.ceil(arr.length / 2) - 1,
+              Math.ceil(arr.length / 2),
+            ],
+          });
+          steps.push({
+            description: `Urutkan bagian kiri: [${arr
+              .slice(0, Math.ceil(arr.length / 2))
+              .sort((a, b) => a - b)
+              .join(", ")}]`,
+            array: arr.slice(),
+            highlight: [0, 1],
+          });
+          steps.push({
+            description: `Urutkan bagian kanan: [${arr
+              .slice(Math.ceil(arr.length / 2))
+              .sort((a, b) => a - b)
+              .join(", ")}]`,
+            array: arr.slice(),
+            highlight: [Math.ceil(arr.length / 2), arr.length - 1],
+          });
+          steps.push({
+            description: `Gabungkan: [${arr.sort((a, b) => a - b).join(", ")}]`,
+            array: arr.sort((a, b) => a - b),
+            highlight: [],
+          });
+        }
+
+        // Ensure we have at least 3 steps
+        while (steps.length < 3) {
+          steps.push({
+            description: `Lanjutkan proses sorting`,
+            array: arr.slice(),
+            highlight: [],
+          });
+        }
+
+        return steps.slice(0, 4);
+      }
+
+      function shuffleArray(array) {
+        const shuffled = array.slice();
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
+
+      // Render functions
+      function renderIslands() {
+        const islandsGroup = document.getElementById("islands-group");
+        islandsGroup.innerHTML = "";
+
+        nodes.forEach((node) => {
+          const isCompleted = gameState.completedNodes.includes(node.id);
+          const isCurrent = gameState.currentNode === node.id;
+          const isUnlocked = gameState.unlockedNodes.includes(node.id);
+          const isTreasure = node.type === "treasure";
+
+          let fillColor = "#4a5568"; // locked
+          let strokeColor = "#2d3748";
+          let cursor = "not-allowed";
+
+          if (isCompleted) {
+            fillColor = "#10b981";
+            strokeColor = "#059669";
+            cursor = "default";
+          } else if (isCurrent) {
+            fillColor = "#f59e0b";
+            strokeColor = "#d97706";
+            cursor = "default";
+          } else if (isUnlocked) {
+            fillColor = "#3b82f6";
+            strokeColor = "#2563eb";
+            cursor = "pointer";
+          }
+
+          if (isTreasure) {
+            fillColor = "#fbbf24";
+            strokeColor = "#f59e0b";
+          }
+
+          const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          g.setAttribute(
+            "class",
+            `island-node ${
+              isUnlocked && !isCompleted && !isCurrent ? "" : "locked"
+            }`
+          );
+          g.setAttribute("data-node-id", node.id);
+          g.style.cursor = cursor;
+
+          if (isTreasure) {
+            // Treasure island
+            g.innerHTML = `
+            <ellipse cx="${node.x}" cy="${
+              node.y + 10
+            }" rx="35" ry="15" fill="#d4a574" opacity="0.5"/>
+            <ellipse cx="${node.x}" cy="${
+              node.y
+            }" rx="30" ry="20" fill="#90EE90"/>
+            <ellipse cx="${node.x}" cy="${
+              node.y - 5
+            }" rx="25" ry="15" fill="#228B22"/>
+            <rect x="${node.x - 15}" y="${
+              node.y - 25
+            }" width="30" height="20" rx="3" fill="#8B4513"/>
+            <rect x="${node.x - 5}" y="${
+              node.y - 20
+            }" width="10" height="8" rx="2" fill="#FFD700"/>
+            <text x="${node.x}" y="${
+              node.y + 35
+            }" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">${
+              node.name
+            }</text>
+          `;
+          } else if (node.type === "start") {
+            // Starting port
+            g.innerHTML = `
+            <ellipse cx="${node.x}" cy="${
+              node.y + 10
+            }" rx="35" ry="15" fill="#8B4513" opacity="0.5"/>
+            <rect x="${node.x - 25}" y="${
+              node.y - 15
+            }" width="50" height="30" rx="3" fill="${fillColor}" stroke="${strokeColor}" stroke-width="3"/>
+            <rect x="${node.x - 3}" y="${
+              node.y - 35
+            }" width="6" height="25" fill="#654321"/>
+            <polygon points="${node.x + 3},${node.y - 35} ${node.x + 25},${
+              node.y - 25
+            } ${node.x + 3},${node.y - 15}" fill="#f5f5f5"/>
+            <text x="${node.x}" y="${node.y + 35}" text-anchor="middle" fill="${
+              isCurrent ? "#fbbf24" : "#94a3b8"
+            }" font-size="10" font-weight="bold">${node.name}</text>
+          `;
+          } else {
+            // Regular island
+            g.innerHTML = `
+            <ellipse cx="${node.x}" cy="${
+              node.y + 15
+            }" rx="40" ry="18" fill="#d4a574" opacity="0.5"/>
+            <ellipse cx="${node.x}" cy="${
+              node.y
+            }" rx="35" ry="22" fill="${fillColor}" stroke="${strokeColor}" stroke-width="3" filter="url(#glow)"/>
+            <ellipse cx="${node.x - 8}" cy="${
+              node.y - 8
+            }" rx="8" ry="12" fill="#228B22"/>
+            <ellipse cx="${node.x + 10}" cy="${
+              node.y - 5
+            }" rx="6" ry="10" fill="#32CD32"/>
+            <text x="${node.x}" y="${
+              node.y + 5
+            }" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${
+              node.id
+            }</text>
+            <text x="${node.x}" y="${node.y + 40}" text-anchor="middle" fill="${
+              isCurrent ? "#fbbf24" : isUnlocked ? "#60a5fa" : "#94a3b8"
+            }" font-size="9" font-weight="bold">${node.name}</text>
+            ${
+              node.algorithm
+                ? `<text x="${node.x}" y="${
+                    node.y + 52
+                  }" text-anchor="middle" fill="#94a3b8" font-size="8">${
+                    node.algorithm
+                  }</text>`
+                : ""
+            }
+          `;
+          }
+
+          if (isUnlocked && !isCompleted && !isCurrent && !isTreasure) {
+            g.addEventListener("click", () => startChallenge(node.id));
+          }
+
+          if (
+            isUnlocked &&
+            node.type === "treasure" &&
+            gameState.completedNodes.includes(6)
+          ) {
+            g.addEventListener("click", () => showVictory());
+            g.style.cursor = "pointer";
+          }
+
+          islandsGroup.appendChild(g);
+        });
+
+        // Update player ship position
+        const currentNodeData = nodes.find(
+          (n) => n.id === gameState.currentNode
+        );
+        if (currentNodeData) {
+          const ship = document.getElementById("player-ship");
+          ship.setAttribute(
+            "transform",
+            `translate(${currentNodeData.x - 20}, ${currentNodeData.y - 20})`
+          );
+        }
+
+        // Update path colors
+        document.querySelectorAll(".path-line").forEach((path) => {
+          const from = parseInt(path.dataset.from);
+          const to = parseInt(path.dataset.to);
+
+          if (
+            gameState.completedNodes.includes(from) &&
+            gameState.completedNodes.includes(to)
+          ) {
+            path.setAttribute("stroke", "#10b981");
+          } else if (
+            gameState.completedNodes.includes(from) &&
+            gameState.unlockedNodes.includes(to)
+          ) {
+            path.setAttribute("stroke", "#3b82f6");
+          } else {
+            path.setAttribute("stroke", "#4a5568");
+          }
+        });
+      }
+
+      function updateHUD() {
+        document.getElementById("score-display").textContent = gameState.score;
+        document.getElementById("lives-display").textContent = gameState.lives;
+        document.getElementById("progress-display").textContent = `${
+          gameState.completedNodes.length - 1
+        }/7`;
+      }
+
+      function startChallenge(nodeId) {
+        const node = nodes.find((n) => n.id === nodeId);
+        if (!node) return;
+
+        gameState.currentChallenge = generateChallenge(node.type);
+        gameState.selectedSteps = [];
+
+        const modal = document.getElementById("challenge-modal");
+        const typeBadge = document.getElementById("challenge-type-badge");
+        const difficulty = document.getElementById("challenge-difficulty");
+        const title = document.getElementById("challenge-title");
+        const algDesc = document.getElementById("algorithm-desc");
+        const instruction = document.getElementById("challenge-instruction");
+        const originalArray = document.getElementById("original-array");
+
+        const typeNames = {
+          bubble: "Bubble Sort",
+          selection: "Selection Sort",
+          insertion: "Insertion Sort",
+          merge: "Merge Sort",
+        };
+
+        typeBadge.textContent =
+          typeNames[gameState.currentChallenge.type] || "Sorting";
+        difficulty.textContent = `Level ${nodeId}`;
+        title.textContent = `Tantangan: ${node.name}`;
+        algDesc.textContent =
+          algorithmInfo[typeNames[gameState.currentChallenge.type]] ||
+          algorithmInfo["Bubble Sort"];
+        instruction.textContent = gameState.currentChallenge.instruction;
+
+        // Render original array
+        originalArray.innerHTML = gameState.currentChallenge.originalArray
+          .map(
+            (num) =>
+              `<div class="w-12 h-12 bg-slate-600 rounded-lg flex items-center justify-center text-white font-bold text-lg border-2 border-slate-500">${num}</div>`
+          )
+          .join("");
+
+        renderStepOptions();
+        renderStepsContainer();
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function renderStepOptions() {
+        const container = document.getElementById("step-options");
+        container.innerHTML = "";
+
+        gameState.currentChallenge.shuffledSteps.forEach((step, index) => {
+          if (!gameState.selectedSteps.includes(index)) {
+            const btn = document.createElement("button");
+            btn.className =
+              "draggable-card px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-xl text-white text-sm font-semibold transition-all";
+            btn.textContent = step.description;
+            btn.dataset.index = index;
+            btn.addEventListener("click", () => selectStep(index));
+            container.appendChild(btn);
+          }
+        });
+      }
+
+      function renderStepsContainer() {
+        const container = document.getElementById("steps-container");
+        container.innerHTML = "";
+
+        for (
+          let i = 0;
+          i < gameState.currentChallenge.correctSteps.length;
+          i++
+        ) {
+          const slot = document.createElement("div");
+          slot.className =
+            "card-slot flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl border-2 border-dashed border-slate-500 min-h-[60px]";
+          slot.dataset.slotIndex = i;
+
+          const label = document.createElement("span");
+          label.className = "text-yellow-400 font-bold text-lg w-8";
+          label.textContent = `${i + 1}.`;
+          slot.appendChild(label);
+
+          if (gameState.selectedSteps[i] !== undefined) {
+            const step =
+              gameState.currentChallenge.shuffledSteps[
+                gameState.selectedSteps[i]
+              ];
+            const stepDiv = document.createElement("div");
+            stepDiv.className =
+              "flex-1 flex items-center justify-between bg-blue-600 rounded-lg px-4 py-2";
+            stepDiv.innerHTML = `
+            <span class="text-white text-sm">${step.description}</span>
+            <button class="ml-2 text-red-300 hover:text-red-100 font-bold" data-remove="${i}">✕</button>
+          `;
+            stepDiv
+              .querySelector("[data-remove]")
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                removeStep(i);
+              });
+            slot.appendChild(stepDiv);
+            slot.classList.remove("border-dashed");
+            slot.classList.add("border-solid", "border-blue-500");
+          } else {
+            const placeholder = document.createElement("span");
+            placeholder.className = "text-slate-500 text-sm italic";
+            placeholder.textContent = "Klik langkah di bawah untuk memilih...";
+            slot.appendChild(placeholder);
+          }
+
+          container.appendChild(slot);
+        }
+      }
+
+      function selectStep(stepIndex) {
+        const emptySlot = gameState.selectedSteps.findIndex(
+          (s, i) => s === undefined || gameState.selectedSteps.length <= i
+        );
+        const insertAt =
+          gameState.selectedSteps.length <
+          gameState.currentChallenge.correctSteps.length
+            ? gameState.selectedSteps.length
+            : gameState.selectedSteps.findIndex((s) => s === undefined);
+
+        if (
+          insertAt !== -1 &&
+          insertAt < gameState.currentChallenge.correctSteps.length
+        ) {
+          gameState.selectedSteps[insertAt] = stepIndex;
+        } else if (
+          gameState.selectedSteps.length <
+          gameState.currentChallenge.correctSteps.length
+        ) {
+          gameState.selectedSteps.push(stepIndex);
+        }
+
+        renderStepOptions();
+        renderStepsContainer();
+      }
+
+      function removeStep(slotIndex) {
+        gameState.selectedSteps.splice(slotIndex, 1);
+        renderStepOptions();
+        renderStepsContainer();
+      }
+
+      function checkAnswer() {
+        if (
+          gameState.selectedSteps.length !==
+          gameState.currentChallenge.correctSteps.length
+        ) {
+          showToast("Lengkapi semua langkah terlebih dahulu!", "warning");
+          return;
+        }
+
+        let correct = true;
+        gameState.selectedSteps.forEach((stepIdx, i) => {
+          const step = gameState.currentChallenge.shuffledSteps[stepIdx];
+          if (step.correctIndex !== i) {
+            correct = false;
+          }
+        });
+
+        if (correct) {
+          handleCorrectAnswer();
+        } else {
+          handleWrongAnswer();
+        }
+      }
+
+      function handleCorrectAnswer() {
+        const modal = document.getElementById("challenge-modal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+
+        const targetNode = gameState.unlockedNodes.find(
+          (n) =>
+            !gameState.completedNodes.includes(n) && n !== gameState.currentNode
+        );
+
+        if (targetNode !== undefined) {
+          gameState.completedNodes.push(targetNode);
+          gameState.currentNode = targetNode;
+
+          // Unlock connected nodes
+          const newUnlocks = connections[targetNode] || [];
+          newUnlocks.forEach((n) => {
+            if (!gameState.unlockedNodes.includes(n)) {
+              gameState.unlockedNodes.push(n);
+            }
+          });
+        }
+
+        gameState.score += 100;
+
+        showResult(true);
+        updateHUD();
+        renderIslands();
+      }
+
+      function handleWrongAnswer() {
+        const modal = document.getElementById("challenge-modal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+
+        gameState.lives--;
+
+        if (gameState.lives <= 0) {
+          showGameOver();
+        } else {
+          // Move back to previous node if possible
+          if (gameState.currentNode > 0) {
+            const prevNode =
+              gameState.completedNodes[gameState.completedNodes.length - 1];
+            if (prevNode !== undefined && prevNode !== gameState.currentNode) {
+              gameState.currentNode = prevNode;
+            }
+          }
+
+          showResult(false);
+          updateHUD();
+          renderIslands();
+        }
+      }
+
+      function showResult(isCorrect) {
+        const modal = document.getElementById("result-modal");
+        const content = document.getElementById("result-content");
+        const icon = document.getElementById("result-icon");
+        const title = document.getElementById("result-title");
+        const message = document.getElementById("result-message");
+        const score = document.getElementById("result-score");
+
+        if (isCorrect) {
+          content.classList.remove("border-red-500");
+          content.classList.add("border-green-500");
+          icon.textContent = "🎉";
+          title.textContent = "Benar!";
+          title.className = "font-fredoka text-3xl mb-3 text-green-400";
+          message.textContent =
+            "Kamu berhasil menyusun langkah sorting dengan benar! Lanjutkan perjalananmu!";
+          score.innerHTML = `<span class="text-green-400">+100 ⭐</span>`;
+        } else {
+          content.classList.remove("border-green-500");
+          content.classList.add("border-red-500");
+          icon.textContent = "😢";
+          title.textContent = "Salah!";
+          title.className = "font-fredoka text-3xl mb-3 text-red-400";
+          message.textContent =
+            "Urutan langkah belum tepat. Kamu mundur ke pulau sebelumnya. Coba lagi!";
+          score.innerHTML = `<span class="text-red-400">-1 ❤️</span>`;
+        }
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function showVictory() {
+        document.getElementById(
+          "final-score"
+        ).innerHTML = `Skor Akhir: <span class="text-yellow-400">${gameState.score}</span> ⭐`;
+        document.getElementById("victory-screen").classList.remove("hidden");
+        document.getElementById("victory-screen").classList.add("flex");
+      }
+
+      function showGameOver() {
+        document.getElementById(
+          "gameover-score"
+        ).innerHTML = `Skor: <span class="text-yellow-400">${gameState.score}</span> ⭐`;
+        document.getElementById("gameover-screen").classList.remove("hidden");
+        document.getElementById("gameover-screen").classList.add("flex");
+      }
+
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl font-bold text-white z-50 animate-slide-up ${
+          type === "warning"
+            ? "bg-yellow-600"
+            : type === "error"
+            ? "bg-red-600"
+            : "bg-blue-600"
+        }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.remove();
+        }, 3000);
+      }
+
+      function resetGame() {
+        gameState.currentNode = 0;
+        gameState.score = 0;
+        gameState.lives = 3;
+        gameState.completedNodes = [0];
+        gameState.unlockedNodes = [0, 1];
+        gameState.currentChallenge = null;
+        gameState.selectedSteps = [];
+
+        updateHUD();
+        renderIslands();
+      }
+
+      function showScreen(screenName) {
+        document.getElementById("bumper-screen").classList.add("hidden");
+        document.getElementById("map-screen").classList.add("hidden");
+
+        if (screenName === "bumper") {
+          document.getElementById("bumper-screen").classList.remove("hidden");
+        } else if (screenName === "map") {
+          document.getElementById("map-screen").classList.remove("hidden");
+          renderIslands();
+          updateHUD();
+        }
+
+        gameState.currentScreen = screenName;
+      }
+
+      // Apply config to UI
+      function applyConfig(cfg) {
+        document.getElementById("main-title").textContent =
+          cfg.game_title || defaultConfig.game_title;
+        document.getElementById("main-subtitle").textContent =
+          cfg.subtitle || defaultConfig.subtitle;
+      }
+
+      // Event Listeners
+      document.getElementById("play-btn").addEventListener("click", () => {
+        showScreen("map");
+      });
+
+      document.getElementById("back-to-menu").addEventListener("click", () => {
+        showScreen("bumper");
+      });
+
+      document
+        .getElementById("close-challenge")
+        .addEventListener("click", () => {
+          document.getElementById("challenge-modal").classList.add("hidden");
+          document.getElementById("challenge-modal").classList.remove("flex");
+        });
+
+      document
+        .getElementById("reset-challenge")
+        .addEventListener("click", () => {
+          gameState.selectedSteps = [];
+          renderStepOptions();
+          renderStepsContainer();
+        });
+
+      document
+        .getElementById("submit-answer")
+        .addEventListener("click", checkAnswer);
+
+      document
+        .getElementById("result-continue")
+        .addEventListener("click", () => {
+          document.getElementById("result-modal").classList.add("hidden");
+          document.getElementById("result-modal").classList.remove("flex");
+
+          // Check for victory
+          if (
+            gameState.completedNodes.includes(6) &&
+            gameState.unlockedNodes.includes(7)
+          ) {
+            showVictory();
+          }
+        });
+
+      document.getElementById("play-again").addEventListener("click", () => {
+        document.getElementById("victory-screen").classList.add("hidden");
+        document.getElementById("victory-screen").classList.remove("flex");
+        resetGame();
+        showScreen("bumper");
+      });
+
+      document.getElementById("retry-game").addEventListener("click", () => {
+        document.getElementById("gameover-screen").classList.add("hidden");
+        document.getElementById("gameover-screen").classList.remove("flex");
+        resetGame();
+        showScreen("bumper");
+      });
+
+      // Initialize SDK
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (cfg) => {
+            config = { ...defaultConfig, ...cfg };
+            applyConfig(config);
+          },
+          mapToCapabilities: (cfg) => ({
+            recolorables: [
+              {
+                get: () =>
+                  cfg.background_color || defaultConfig.background_color,
+                set: (v) =>
+                  window.elementSdk.setConfig({ background_color: v }),
+              },
+              {
+                get: () => cfg.surface_color || defaultConfig.surface_color,
+                set: (v) => window.elementSdk.setConfig({ surface_color: v }),
+              },
+              {
+                get: () => cfg.text_color || defaultConfig.text_color,
+                set: (v) => window.elementSdk.setConfig({ text_color: v }),
+              },
+              {
+                get: () =>
+                  cfg.primary_action_color ||
+                  defaultConfig.primary_action_color,
+                set: (v) =>
+                  window.elementSdk.setConfig({ primary_action_color: v }),
+              },
+              {
+                get: () =>
+                  cfg.secondary_action_color ||
+                  defaultConfig.secondary_action_color,
+                set: (v) =>
+                  window.elementSdk.setConfig({ secondary_action_color: v }),
+              },
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined,
+          }),
+          mapToEditPanelValues: (cfg) =>
+            new Map([
+              ["game_title", cfg.game_title || defaultConfig.game_title],
+              ["subtitle", cfg.subtitle || defaultConfig.subtitle],
+            ]),
+        });
+      }
+
+      // Initialize
+      applyConfig(config);
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'9b241c97360bcdf5',t:'MTc2NjQ1MzYxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
